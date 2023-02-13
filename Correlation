@@ -1,0 +1,47 @@
+import datetime as dt
+import numpy as np
+import pandas_datareader as pdr
+import pandas_datareader.data as web
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+
+# Correlation between Stocks in a Portfolio
+def Correlation():
+    
+    
+    data = pd.DataFrame()
+    tickers = ['AAPL', 'TSLA', 'GOOG', 'AMZN']
+
+    for t in tickers:
+        data[t] = web.DataReader(t, data_source='yahoo', start='2020-1-1')['Adj Close']
+    
+    log_returns = np.log(data/data.shift())
+    log_returns.corr() # computes pairwise correlations
+    
+    # We can also add the sp500 benchmark as a column in our data frame as follows:
+    sp500 = web.DataReader(name='SPY', data_source='yahoo', start='2020-1-1')['Adj Close']
+    log_returns['SP500'] = np.log(sp500/ sp500.shift())
+
+    # We can test correlations of different tickers with our correlation matrix as follows
+    def test_correlation():
+        ticker = input('Add Ticker')
+        df = web.DataReader(ticker, data_source='yahoo', start='2020-1-1')['Adj Close']
+        lr = log_returns.copy()
+        lr[ticker] = np.log(df/df.shift())
+        return print(lr.corr())
+    test_correlation()
+
+    # We can plot the correlations of any two stocks in our matrix as follows
+    def visualise_correlation():
+        ticker1 = input('Add Ticker 1')
+        ticker2 = input('Add Ticker 2')
+        df = pd.DataFrame()
+        df[ticker1] = pd.DataFrame(web.DataReader(ticker1, data_source='yahoo', start='2020-1-1')['Adj Close'])
+        df[ticker2] = pd.DataFrame(web.DataReader(ticker2, data_source='yahoo', start='2020-1-1')['Adj Close'])
+        df = df/df.iloc[0]
+        print(df)
+        fig, ax = plt.subplots()
+        df.plot(ax=ax)
+        plt.show()
+    visualise_correlation()
