@@ -1,0 +1,55 @@
+import datetime as dt
+import numpy as np
+import pandas_datareader as pdr
+import pandas_datareader.data as web
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+
+# Minimum Variance Frontier
+def Minimum_Variance_Frontier():
+    # Scraping the Data
+    data = pd.DataFrame()
+    tickers = ['AAPL', 'TSLA', 'META', 'TWTR']
+    for t in tickers:
+        data[t] = web.DataReader(t, data_source='yahoo', start='2020-1-1')['Adj Close']
+
+    # Getting the Sharpe Ratio of the Portfolio
+    log_returns = np.log(data/data.shift())
+    weight = np.random.random(4)
+    weight /= weight.sum()
+    print(weight)
+    exp_ret = np.sum(log_returns.mean()*weight)*252
+    print(exp_ret)
+    exp_vol = np.sqrt(np.dot(weight.T, np.dot(log_returns.cov()*252, weight))) # .T is transposed
+    Sharpe_Ratio = exp_ret / exp_vol
+    print('The Sharpe Ratio of this Portfolio is', Sharpe_Ratio)
+
+    # Running a Monte Carlo Simulation
+    n = 5000
+    weights = np.zeros((n, 4)) # this is where we save the values for our simulations
+    exp_rtns = np.zeros(n)
+    exp_vols = np.zeros(n)
+    sharpe_ratios = np.zeros(n)
+    print('Monte Carlo Variables Set.')
+
+    for i in range(n):    
+        weight = np.random.random(4)
+        weight /= weight.sum()
+        weights[i] = weight
+
+        exp_rtns[i] = np.sum(log_returns.mean()*weight)*252
+        exp_vols[i] = np.sqrt(np.dot(weight.T, np.dot(log_returns.cov()*252, weight)))
+        sharpe_ratios[i] = exp_rtns[i] / exp_vols[i]
+
+    max = sharpe_ratios.max() # Finding the highest Sharpe Ratio
+    loc = sharpe_ratios.argmax() # Find the location of the Highest Sharpe Ratio
+    print('The Max Sharpe Ratio is', max, 'in the location', loc, 'with the weightings of', weights[loc])
+
+    # Plotting the Minimum Varniance Frontier
+    fig, ax = plt.subplots()
+    ax.scatter(exp_vols, exp_rtns, c=sharpe_ratios) # colour the sharpe ratios
+    ax.scatter(exp_vols[sharpe_ratios.argmax()], exp_rtns[sharpe_ratios.argmax()], c='r')
+    ax.set_xlabel('Expected Volatility')
+    ax.set_ylabel('Expected Return')
+    plt.show()
