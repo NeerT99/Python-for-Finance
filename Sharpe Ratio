@@ -1,0 +1,43 @@
+import datetime as dt
+import numpy as np
+import pandas_datareader as pdr
+import pandas_datareader.data as web
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+
+
+def Sharpe_Ratio():
+    data = pd.DataFrame()
+    tickers = ['AAPL', 'TSLA', 'GOOG', 'META']
+    for t in tickers:
+        data[t] = web.DataReader(t, data_source='yahoo', start='2020-1-1')['Adj Close']
+
+    portfolio = [0.25, 0.15, 0.40, 0.20]
+    pct_change = data/data.shift()
+    # print(pct_change) # percentage change in value
+    log_returns = np.sum(np.log(data/data.shift())*portfolio, axis=1)
+    print(log_returns) # taking all the returns, log them, sum the log returns
+
+    fig, ax = plt.subplots()
+    log_returns.hist(bins=50, ax=ax)
+    # plt.show()
+    # shows us how many days of our returns deviate around 0
+    # we can now combine this return into a sharpe ratio
+    log_returns.std()
+    Sharpe_Ratio = log_returns.mean() / log_returns.std() # note rf ignored as small
+    print(Sharpe_Ratio)
+    annual_sr = Sharpe_Ratio * 252**0.5 # **0.5 = square root
+    print('The Annualised Sharpe Ratio for Portfolio 1 is', annual_sr)
+
+    # The Sharpe Ratio on its own is not the most useful, we use it for comparision
+    # Thus lets introduce new weights
+    weight = np.random.random(4)
+    weight /= weight.sum()
+    print(weight)
+
+    log_returns2 = np.sum(np.log(data/data.shift())*weight, axis=1)
+    Sharpe_Ratio2 = log_returns2.mean() / log_returns2.std()
+    annual_sr2 = Sharpe_Ratio2 * 252**0.5 # 252 trading days in a year
+    # The higher the Sharpe Ratio, the better the risk adjusted return.
+    print('The Annualised Sharpe Ratio for Portfolio 2 is', annual_sr2)
