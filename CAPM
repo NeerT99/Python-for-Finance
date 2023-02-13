@@ -1,0 +1,22 @@
+# Calculating CAPM
+
+def CAPM():
+    data = pd.DataFrame()
+    tickers = ['SPY', 'AAPL', 'MSFT', 'TSLA']
+    for t in tickers:
+        data[t] = web.DataReader(t, data_source='yahoo', start='2016-12-1', end='2022-1-1')['Adj Close']
+    
+    log_returns = np.log(data/data.shift())
+    cov = log_returns.cov()
+    var = log_returns['SPY'].var()
+    ticker_beta = cov.loc['AAPL', 'SPY']/var
+    print('Apple has a beta of', ticker_beta)
+
+    risk_free_return = 0.0138
+    market_return = 0.105
+    expected_return = risk_free_return + ticker_beta * (market_return - risk_free_return)
+    print('The Expected Return of Apple is', expected_return)
+
+    betas = cov.loc['SPY']/var
+    expected_returns = risk_free_return + betas * (market_return - risk_free_return)
+    print('The Expected Returns via CAPM are', '\n', str(round(expected_returns, 3)))
