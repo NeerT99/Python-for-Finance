@@ -1,0 +1,70 @@
+import numpy as np
+import pandas as pd
+import pandas_datareader.data as web
+import matplotlib.pyplot as plt
+import random
+
+# Obtaining Efficient Frontier
+assets = ['AAPL', '^GSPC']
+pf_data = pd.DataFrame()
+for a in assets:
+    pf_data[a] = web.DataReader(a, data_source = 'yahoo', start = '2010-1-1')['Adj Close']
+
+print(pf_data.tail())
+(pf_data / pf_data.iloc[0] * 100).plot(figsize=(10, 5))
+log_returns = np.log(pf_data / pf_data.shift(1)) 
+a = log_returns.mean() * 250 
+b = log_returns.cov() * 250
+c = log_returns.corr()
+
+num_assets = len(assets)
+print(num_assets)
+
+arr = np.random.random(2)
+print(arr) 
+
+d = arr[0] + arr[1]
+print(d)
+
+weights = np.random.random(num_assets)
+weights /= np.sum(weights)
+print(weights)
+w = weights[0] + weights[1]
+print(w) # 1.0
+
+# Expected Portfolio Returns
+epr = np.sum(weights * log_returns.mean()) * 250
+print(epr) 
+
+# Expected Portfolio Variance
+epv = np.dot(weights.T, np.dot(log_returns.cov() * 250, weights))
+print(epv)
+
+# Expected Portfolio Volatility
+epvol = np.sqrt(np.dot(weights.T, np.dot(log_returns.cov() * 250, weights)))
+print(epvol) 
+
+# Comparing a Simulation of 1000 Portfolios composed of different weightings of the same assets
+# Creating a Graph that Visualises the hypothetical returns vs volatilities
+pfolio_returns = []
+pfolio_volatilities = []
+
+for x in range(1000): # Generating 1000 random weights
+    weights = np.random.random(num_assets)
+    weights /= np.sum(weights)
+    pfolio_returns.append(np.sum(weights * log_returns.mean()) * 250) # adds to returns list until 1000
+    pfolio_volatilities.append(np.sqrt(np.dot(weights.T, np.dot(log_returns.cov() * 250, weights))))
+# print('ret', pfolio_returns, 'vol', pfolio_volatilities)
+
+# Converting this List into a Numpy Array
+pfolio_returns = np.array(pfolio_returns)
+pfolio_volatilities = np.array(pfolio_volatilities)
+# print('ret', pfolio_returns, 'vol', pfolio_volatilities)
+
+portfolios = pd.DataFrame({'Return': pfolio_returns, 'Volatility': pfolio_volatilities})
+print(portfolios.head())
+
+portfolios.plot(x='Volatility', y = 'Return', kind = 'scatter', figsize=(10,6))
+plt.xlabel('Expected Volatility')
+plt.ylabel('Expected Return')
+plt.show()
