@@ -1,0 +1,42 @@
+import datetime as dt
+import numpy as np
+import pandas_datareader as pdr
+import pandas_datareader.data as web
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+
+# The Beta Value
+def Beta():
+    # Beta above 1 - stock is more volatile than the market
+    # Beta below 1 - stock is less volatile than the market
+    data = pd.DataFrame()
+    tickers = ['SPY', 'AAPL', 'MSFT', 'TSLA']
+    for t in tickers:
+        data[t] = web.DataReader(t, data_source='yahoo', start='2016-12-1', end='2022-1-1')['Adj Close']
+
+    # Beta = Covariance / Variance
+    log_returns = np.log(data/data.shift())
+    cov = log_returns.cov()
+    var = log_returns['SPY'].var()
+    ticker_beta = cov.loc['AAPL', 'SPY']/var
+    print(ticker_beta)
+
+    # Can also calculate the beta of all the ticker simultaneously
+    betas = cov.loc['SPY']/var
+    print(betas)
+
+    # Beta via Linear Regression
+    X = log_returns['SPY'].iloc[1:].to_numpy().reshape(-1, 1)
+    Y = log_returns['AAPL'].iloc[1:].to_numpy().reshape(-1, 1)
+
+    lin_regr = LinearRegression()
+    lin_regr.fit(X,Y)
+
+    b = lin_regr.coef_[0, 0]
+    print('Apple has a beta of', b)
+
+    fig, ax = plt.subplots()
+    ax.scatter(X, Y)
+    
+    plt.show()
