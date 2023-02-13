@@ -1,0 +1,22 @@
+# This Function displays the volatility of stock relative to its stock price
+
+def Volality():
+    data = web.DataReader(name='AAPL', data_source='yahoo', start='2020-1-1')
+    high_low = data['High'] - data['Low']
+    high_cp = np.abs(data['High'] - data['Adj Close'])
+    low_cp = np.abs(data['Low'] - data['Adj Close'])
+
+    df = pd.concat([high_low, high_cp, low_cp], axis=1)
+    true_range = np.max(df, axis=1)
+    avg_true_range = true_range.rolling(14).mean()
+    print(avg_true_range)
+    
+    fig, ax = plt.subplots()
+    avg_true_range.plot(ax=ax)
+    ax2 = data['Close'].plot(ax=ax, secondary_y=True, alpha=.3)
+    ax.set_ylabel('ATR')
+    ax2.set_ylabel('Price')
+    plt.title('Change in Volatility of AAPL vs Stock Price')
+    plt.show()
+
+Volatility()
